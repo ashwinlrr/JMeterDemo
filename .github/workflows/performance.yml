@@ -1,0 +1,28 @@
+name: Pre-Prod Deployment with JMeter Tests
+
+on:
+  push:
+    branches:
+      - pre-prod
+
+jobs:
+  performance-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install JMeter
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jmeter
+
+      - name: Run JMeter Test
+        run: |
+          jmeter -n -t tests/reqres_test.jmx -l results.jtl -e -o report
+
+      - name: Upload Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: jmeter-report
+          path: report

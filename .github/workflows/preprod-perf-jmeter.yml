@@ -1,0 +1,56 @@
+# .github/workflows/preprod-perf-jmeter.yml
+name: PreProd Performance Gate (JMeter)
+
+on:
+  workflow_run:
+    workflows: ["PreProd Deploy"]   # Change if your deploy workflow has a different name
+    types: [completed]
+
+jobs:
+  jmeter-perf:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    concurrency:
+      group: perf-preprod-${{ github.ref }}
+      cancel-in-progress: true
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install JMeter
+        run: |
+          JM_VERSION=5.6.3
+          curl -sSL https://downloads.apache.org/jmeter/binaries/apache-jmeter-${JM_VERSION}.tgz \
+          | tar -xz
+          echo "$GITHUB_WORKSPACE/apache-jmeter-${JM_VERSION}/bin" >> $GITHUB_PATH
+
+      - name: Run JMeter (Non-GUI) and produce JTL
+        run: |
+          mkdir -p artifacts
+          jmeter -n \
+            -t tests/jmeter/fast-regression.jmx \
+            -l artifacts/results.jtl \
+            -Jjmeter.save.saveservice.output_format=csv
+
+      - name: Generate HTML Dashboard
+        run: |
+          jmeter -g artifacts/results.jtl -o artifacts/report
+
+      - name: Enforce performance gates (p95/p99, error-rate)
+        run: |
+          node tools/jtl-assert.js \
+            --jtl artifacts/results.jtl \
+            --p95-lt 300 \
+            --p99-lt 500 \
+            --error-rate-lt 1.0
+
+      - name: Upload JMeter HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jmeter-report
+          path: artifacts/report

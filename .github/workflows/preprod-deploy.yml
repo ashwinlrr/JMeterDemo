@@ -1,0 +1,26 @@
+name: PreProd Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  preprod-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build (simulated)
+        run: echo "Building application..."
+
+      - name: Run unit tests (simulated)
+        run: echo "Running tests..."
+
+      - name: Deploy to Pre-Prod (simulated)
+        run: echo "Deploying to Pre-Production environment..."
+
+      - name: Deployment completed
+        run: echo "Pre-Prod Deployment Successful"

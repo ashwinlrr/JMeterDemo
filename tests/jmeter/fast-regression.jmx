@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.3">
   <hashTree>
-    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="JSONPlaceholder Fast Regression" enabled="true">
-      <stringProp name="TestPlan.comments">Fast suite: List → Create → Read → Update → Delete (JSONPlaceholder)</stringProp>
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="JSONPlaceholder Fast Regression (10 users / 2 min)" enabled="true">
+      <stringProp name="TestPlan.comments">Fast suite capped at 10 users and ~2 minutes.</stringProp>
       <boolProp name="TestPlan.functional_mode">false</boolProp>
       <boolProp name="TestPlan.tearDown_on_shutdown">true</boolProp>
       <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
@@ -16,17 +16,17 @@
     </TestPlan>
     <hashTree>
 
-      <!-- Thread Group -->
-      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="50 users / ~6m" enabled="true">
+      <!-- Thread Group: 10 VUs, 2 minutes total -->
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="10 users / 2m" enabled="true">
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
           <boolProp name="LoopController.continue_forever">false</boolProp>
           <stringProp name="LoopController.loops">-1</stringProp>
         </elementProp>
-        <stringProp name="ThreadGroup.num_threads">50</stringProp>
-        <stringProp name="ThreadGroup.ramp_time">30</stringProp>
-        <boolProp name="ThreadGroup.scheduler">true</boolProp>
-        <stringProp name="ThreadGroup.duration">360</stringProp>
+        <stringProp name="ThreadGroup.num_threads">10</stringProp>      <!-- Users -->
+        <stringProp name="ThreadGroup.ramp_time">10</stringProp>        <!-- Ramp-up (sec) -->
+        <boolProp name="ThreadGroup.scheduler">true</boolProp>          <!-- Use scheduler -->
+        <stringProp name="ThreadGroup.duration">120</stringProp>        <!-- Duration (sec) -->
         <stringProp name="ThreadGroup.delay">0</stringProp>
       </ThreadGroup>
       <hashTree>
@@ -57,7 +57,7 @@
         </UniformRandomTimer>
         <hashTree/>
 
-        <!-- 1) List users -->
+        <!-- 1) GET /users -->
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /users" enabled="true">
           <stringProp name="HTTPSampler.path">/users</stringProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
@@ -74,7 +74,7 @@
           <hashTree/>
         </hashTree>
 
-        <!-- 2) Create post -->
+        <!-- 2) POST /posts -->
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /posts (create)" enabled="true">
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
@@ -90,7 +90,6 @@
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
         </HTTPSamplerProxy>
         <hashTree>
-          <!-- POST returns 201; accept any 2xx -->
           <DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Latency &lt; 300 ms" enabled="true"><stringProp name="DurationAssertion.duration">300</stringProp></DurationAssertion>
           <hashTree/>
           <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Status 2xx" enabled="true">
@@ -102,7 +101,7 @@
           <hashTree/>
         </hashTree>
 
-        <!-- 3) Read user -->
+        <!-- 3) GET /users/1 -->
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /users/1" enabled="true">
           <stringProp name="HTTPSampler.path">/users/1</stringProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
@@ -119,7 +118,7 @@
           <hashTree/>
         </hashTree>
 
-        <!-- 4) Update post -->
+        <!-- 4) PUT /posts/1 -->
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PUT /posts/1 (update)" enabled="true">
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
@@ -146,7 +145,7 @@
           <hashTree/>
         </hashTree>
 
-        <!-- 5) Delete post -->
+        <!-- 5) DELETE /posts/1 -->
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="DELETE /posts/1" enabled="true">
           <stringProp name="HTTPSampler.path">/posts/1</stringProp>
           <stringProp name="HTTPSampler.method">DELETE</stringProp>
